@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>Uuid</AssemblyName>
+    <PackageId>CfmArt.Uuid</PackageId>
+    <PackageVersion>0.0.1</PackageVersion>
+    <Authors>cfm-art</Authors>
+    <Copyright>(c) cfm-art</Copyright>
+    <Title>Uuid</Title>
+    <Description>uuid</Description>
+    <LangVersion>8.0</LangVersion>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/cfm-art/DotNetUuid</RepositoryUrl>
+  </PropertyGroup>
+</Project>
