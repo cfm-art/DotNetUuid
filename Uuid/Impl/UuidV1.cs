@@ -12,6 +12,8 @@ namespace Impl
         private static readonly object LockObject = new UuidV1();
         private static readonly DateTimeOffset BaseTime = new DateTimeOffset(1582, 10, 15, 0, 0, 0, TimeSpan.FromHours(0));
 
+        private static long OldTicks = 0L;
+
         static UuidV1()
         {
             Sequence_ = new Random().Next() & 0x3fff;
@@ -20,15 +22,18 @@ namespace Impl
         private UuidV1() {}
 
 
-        static int Sequence
+        static int Sequence(long tick)
         {
-            get
+            lock(LockObject)
             {
-                lock(LockObject)
+                long old = OldTicks;
+                OldTicks = tick;
+                if (tick <= old)
                 {
                     Sequence_ = (Sequence_ + 1) & 0x3fff;
                     return Sequence_;
                 }
+                return Sequence_;
             }
         }
 
@@ -45,16 +50,31 @@ namespace Impl
             //      8bits: seq
             // 48bits: mac-address
             var now = (DateTimeOffset.UtcNow - BaseTime).Ticks;
-            var seq = Sequence;
+            var seq = Sequence(now);
             var mac = MacAddress.Value;
 
-            return new Guid(
-                (uint) (now & 0xffffffff),                      // 32bits
-                (ushort) ((now >> 32) & 0xffff),                // 16bits
-                (ushort) (((now >> 48) & 0x0fff) | 0x1000),     // 16bits
-                (byte) ((seq >> 8) & 0x3f),       // 8bits (2/6)
-                (byte) (seq & 0xff),       // 8bits
-                mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+            byte[] guid = new byte[16];
+            guid[0] = (byte) ((now >> 0) & 0xff);
+            guid[1] = (byte) ((now >> 8) & 0xff);
+            guid[2] = (byte) ((now >> 16) & 0xff);
+            guid[3] = (byte) ((now >> 24) & 0xff);
+
+            guid[4] = (byte) ((now >> 32) & 0xff);
+            guid[5] = (byte) ((now >> 40) & 0xff);
+
+            guid[6] = (byte) ((now >> 48) & 0xff);
+            guid[7] = (byte) (((now >> 56) & 0x0f) | 0x10);
+
+            guid[8] = (byte) ((seq >> 8) & 0x3f);
+            guid[9] = (byte) (seq & 0xff);
+            
+            guid[10] = mac[0];
+            guid[11] = mac[1];
+            guid[12] = mac[2];
+            guid[13] = mac[3];
+            guid[14] = mac[4];
+            guid[15] = mac[5];
+            return new Guid(guid);
         }
     }
 }
